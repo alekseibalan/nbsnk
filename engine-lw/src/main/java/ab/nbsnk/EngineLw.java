@@ -17,52 +17,49 @@
 
 package ab.nbsnk;
 
+import ab.nbsnk.opengl.LwDemo;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.system.MemoryUtil;
 
 import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.function.Supplier;
+
+import static org.lwjgl.opengl.GL33C.*;
 
 public class EngineLw implements Engine3d {
 
+  public static final boolean FLIP_Y = true;
   private int screenWidth;
   private int screenHeight;
   private BufferedImage screenImage;
   private long windowHandle;
-  private ByteBuffer pixelBuffer;
-  private byte[] pixelBytes;
   private int[] pixelInts;
+  LwDemo lwDemo;
 
   @Override
   public EngineLw open(BufferedImage image) {
+    if (windowHandle != 0) throw new IllegalStateException();
     if (image.getType() != BufferedImage.TYPE_INT_RGB && image.getType() != BufferedImage.TYPE_INT_ARGB) throw new IllegalArgumentException();
     screenWidth = image.getWidth();
     screenHeight = image.getHeight();
     screenImage = image;
     if (!GLFW.glfwInit()) throw new IllegalStateException();
-    GLFW.glfwInit();
     GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
-    windowHandle = GLFW.glfwCreateWindow(screenWidth, screenHeight, "", MemoryUtil.NULL, MemoryUtil.NULL);
+    windowHandle = GLFW.glfwCreateWindow(screenWidth, screenHeight, "", 0, 0);
     GLFW.glfwMakeContextCurrent(windowHandle);
     GL.createCapabilities();
-    FloatBuffer vertexBuffer = MemoryUtil.memAllocFloat(3 * 2).put(0f).put(0f).put(1f).put(0f).put(0f).put(1f).flip();
-    int vbo = GL15.glGenBuffers();
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
-    MemoryUtil.memFree(vertexBuffer);
-    GL15.glEnableClientState(GL15.GL_VERTEX_ARRAY);
-    GL15.glVertexPointer(2, GL15.GL_FLOAT, 0, 0L);
-    GLFW.glfwPollEvents();
-    GL15.glDrawArrays(GL15.GL_TRIANGLES, 0, 3);
-
-    pixelBuffer = MemoryUtil.memAlloc(4 * screenWidth * screenHeight);
-    pixelBytes = new byte[4 * screenWidth * screenHeight];
-    pixelInts = new int[screenWidth * screenHeight];
+    pixelInts = new int[screenWidth * (FLIP_Y ? 1: screenHeight)];
+    lwDemo = new LwDemo();
     return this;
+  }
+
+  @Override
+  public void close() {
+    if (windowHandle == 0) return;
+    lwDemo.close();
+    GLFW.glfwDestroyWindow(windowHandle);
+    GLFW.glfwTerminate();
+    windowHandle = 0;
   }
 
   @Override
@@ -107,15 +104,16 @@ public class EngineLw implements Engine3d {
 
   @Override
   public void update() {
-    GL15.glReadPixels(0, 0, screenWidth, screenHeight, GL15.GL_RGBA, GL15.GL_UNSIGNED_BYTE, pixelBuffer);
-    pixelBuffer.get(pixelBytes);
-    pixelBuffer.flip();
-    for (int y = 0, i = 0, j = 4 * (screenHeight - 1) * screenWidth; y < screenHeight; y++) {
-      for (int x = 0; x < screenWidth; x++) pixelInts[i++] = pixelBytes[j++] << 16 & 0xFF0000 |
-          pixelBytes[j++] << 8 & 0xFF00 | pixelBytes[j++] & 0xFF | pixelBytes[j++] << 24 & 0xFF000000;
-      j -= 8 * screenWidth;
+    lwDemo.draw();
+    if (FLIP_Y) {
+      for (int i = 0, j = screenHeight - 1; i < screenHeight; i++, j--) {
+        glReadPixels(0, i, screenWidth, 1, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixelInts);
+        screenImage.getRaster().setDataElements(0, j, screenWidth, 1, pixelInts);
+      }
+    } else {
+      glReadPixels(0, 0, screenWidth, screenHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixelInts);
+      screenImage.getRaster().setDataElements(0, 0, screenWidth, screenHeight, pixelInts);
     }
-    screenImage.getRaster().setDataElements(0, 0, screenWidth, screenHeight, pixelInts);
   }
 
   @Override
@@ -126,13 +124,6 @@ public class EngineLw implements Engine3d {
   @Override
   public EngineLw textSupplier(Supplier<String> supplier) {
     return this;
-  }
-
-  @Override
-  public void close() {
-    GLFW.glfwDestroyWindow(windowHandle);
-    GLFW.glfwTerminate();
-    MemoryUtil.memFree(pixelBuffer);
   }
 
   public static class NodeLw implements Node {
