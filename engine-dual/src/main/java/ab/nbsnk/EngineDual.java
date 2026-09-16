@@ -264,6 +264,13 @@ public class EngineDual implements Engine3d {
     }
 
     @Override
+    public ShapeDual setDiffuseMap(BufferedImage image) {
+      ((Shape) this.nodeLeft).setDiffuseMap(image);
+      ((Shape) this.nodeRight).setDiffuseMap(image);
+      return this;
+    }
+
+    @Override
     public ShapeDual setBumpMap(BufferedImage image) {
       ((Shape) this.nodeLeft).setBumpMap(image);
       ((Shape) this.nodeRight).setBumpMap(image);

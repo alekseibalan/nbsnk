@@ -337,11 +337,6 @@ public class EngineNbs implements Engine3d {
 
     public ShapeNbs(Obj obj) {
       this.obj = obj.clone();
-      if (obj.image != null) {
-        this.textureWidth = obj.image.getWidth();
-        this.textureHeight = obj.image.getHeight();
-        this.textureRaster = imageCache.computeIfAbsent(obj.image, EngineNbs::loadImg);
-      }
       this.tangentBitangent = Shader.computeTangentBitangent(obj);
     }
 
@@ -372,6 +367,14 @@ public class EngineNbs implements Engine3d {
         textureRaster = tr;
       }
       selfIllumination = true;
+      return this;
+    }
+
+    @Override
+    public ShapeNbs setDiffuseMap(BufferedImage image) {
+      this.textureWidth = image.getWidth();
+      this.textureHeight = image.getHeight();
+      this.textureRaster = imageCache.computeIfAbsent(image, EngineNbs::loadImg);
       return this;
     }
 

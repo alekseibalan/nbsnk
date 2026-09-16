@@ -86,13 +86,15 @@ public class Sketch3 {
       Obj.scale(tileObj, BOX_WIDTH, BOX_HEIGHT, BOX_WIDTH);
       Obj.flatNormal(tileObj);
       // FIXME: 2025-10-23 normals must be interpolated by landscape generator while it works on a full set of tiles
-      tileObj.image = boxTextureIn;
     }
     Obj gridShape = new Shapes.Cube();
+    BufferedImage gridImage = Shapes.image();
 
     // cattle
     //gridShape = new Animals.Pig();
+    //gridImage = Animals.imagePig();
     //gridShape = new Animals.Sheep();
+    //gridImage = Animals.imageSheep();
 
     screen = new Screen();
     int screenWidth = fullHd ? 1920 : 640;
@@ -107,7 +109,7 @@ public class Sketch3 {
     for (int y = -100; y <= 100; y += 40) {
       for (int x = -100; x <= 100; x += 40) {
         Particle particle = new Particle(0);
-        particle.node = engine3d.shape(gridShape);
+        particle.node = engine3d.shape(gridShape).setDiffuseMap(gridImage);
         particle.p = new Pnt(x, 0, y);
         particle.radius = 1;
         targets.add(particle);
@@ -120,25 +122,26 @@ public class Sketch3 {
     starIcon = Animals.starIcon();
     for (int z = 0, i = 0; z < TILE_DIV; z++) {
       for (int x = 0; x < TILE_DIV; x++, i++) {
-        tiles[i] = engine3d.shape(tileObjs[i]);
+        tiles[i] = engine3d.shape(tileObjs[i]).setDiffuseMap(boxTextureIn);
         tilexz[2 * i] = (x + 0.5) * BOX_WIDTH / TILE_DIV;
         tilexz[2 * i + 1] = (z + 0.5) * BOX_WIDTH / TILE_DIV;
       }
     }
     Obj skyObj = Animals.sky().scale(FAR_CLIP * 0.99);
-    //skyObj.image = Sketch2.img("assets/sky_test.png");
-    //skyObj.image = Sketch2.img("assets/pano2.png");
-    engine3d.shape(skyObj).selfIllumination(-1).connect(horizon);
-    engine3d.shape(new Shapes.Icosphere().scale(3)).selfIllumination(-1).translation(0, 0, -FAR_CLIP * 0.95).connect(moon);
+    BufferedImage skyImage = Animals.imageSky();
+    //skyImage = Sketch2.img("assets/sky_test.png");
+    //skyImage = Sketch2.img("assets/pano2.png");
+    engine3d.shape(skyObj).setDiffuseMap(skyImage).selfIllumination(-1).connect(horizon);
+    engine3d.shape(new Shapes.Icosphere().scale(3)).setDiffuseMap(Shapes.image()).selfIllumination(-1).translation(0, 0, -FAR_CLIP * 0.95).connect(moon);
     engine3d.light().translation(0, 0, -FAR_CLIP * 0.98).connect(moon);
     //engine3d.shape(gridShape).selfIllumination().translation(0, 35, 50);
 
     Projectile apple = new Projectile(GRAVITY, 5, a -> engine3d.shape(new Shapes.Icosphere().scale(0.07 * a))
-        .selfIllumination(new Col(0xFFCA4E21).mul(a).argb()));
+        .setDiffuseMap(Shapes.image()).selfIllumination(new Col(0xFFCA4E21).mul(a).argb()));
     apple.rotatePitch = 4;
     apple.radius = 0.09;
     apple.light = engine3d.light().setColor(0xFFBF3720);
-    apple.node = engine3d.shape(Animals.apple().scale(0.08)).selfIllumination(-1);
+    apple.node = engine3d.shape(Animals.apple().scale(0.08)).setDiffuseMap(Animals.imageApple()).selfIllumination(-1);
 
     screen.gameController = true;
     boolean[] mouseButton = new boolean[10];

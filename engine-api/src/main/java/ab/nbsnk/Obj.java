@@ -34,8 +34,6 @@ public class Obj implements Cloneable {
   public double[] vertex;
   public double[] normal;
   public double[] texture; // 0 <= (x, y) <= 1, Y-up, as in .obj
-  public BufferedImage image;
-  public String id;
 
   @Override
   protected Obj clone() {
@@ -49,8 +47,6 @@ public class Obj implements Cloneable {
     obj.vertex = Arrays.copyOf(vertex, vertex.length);
     obj.normal = Arrays.copyOf(normal, normal.length);
     obj.texture = texture == null ? null : Arrays.copyOf(texture, texture.length);
-    obj.image = image;
-    obj.id = id;
     return obj;
   }
 
@@ -87,7 +83,6 @@ public class Obj implements Cloneable {
       face[i + 2] = texture.length > 0 ? f.get(i + 1) - 1 : 0; // t
     }
     Obj obj = new Obj();
-    obj.id = UUID.nameUUIDFromBytes(fileBytes).toString();
     obj.face = face;
     obj.vertex = vertex;
     if (normal.length > 0) obj.normal = normal;
@@ -312,16 +307,6 @@ public class Obj implements Cloneable {
       obj.vertex[i++] += y;
       obj.vertex[i++] += z;
     }
-  }
-
-  public Obj withImage(Path path) {
-    this.image = image(path);
-    return this;
-  }
-
-  public Obj withImage(BufferedImage image) {
-    this.image = image;
-    return this;
   }
 
   public Obj inverted() {

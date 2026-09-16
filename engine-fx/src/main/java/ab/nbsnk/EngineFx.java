@@ -51,13 +51,13 @@ import java.util.function.Supplier;
 /**
  * https://openjfx.io/javadoc/24/javafx.graphics/javafx/scene/paint/PhongMaterial.html
  * JavaFx limitations:
- * Always Phong, no way to switch to flat shading
  * No light attenuation with distance
  * No shadows
  * Missing setSelfIlluminationColor method that can change the brightness or color
  * of setSelfIlluminationMap the similar way as setDiffuseColor can alter setDiffuseMap
  * No ambient light per shape, only global AmbientLight
  * No reflection mapping
+ * flat shading can be achieved by downgrading normals and disabling specular reflection
  */
 public class EngineFx implements Engine3d {
 
@@ -355,12 +355,6 @@ public class EngineFx implements Engine3d {
       super(new MeshView(loadObj(obj)));
       MeshView meshView = (MeshView) this.node;
       material = new PhongMaterial();
-      if (obj.image != null) {
-        material.setDiffuseMap(imageCache.computeIfAbsent(obj.image, EngineFx::loadImg));
-        //double cl = 0.5;
-        //double tr = 0.5;
-        //material.setDiffuseColor(Color.color(cl, cl, cl, tr));
-      }
       meshView.setMaterial(material);
     }
 
@@ -401,6 +395,12 @@ public class EngineFx implements Engine3d {
       }
       material.setSelfIlluminationMap(image);
       material.setDiffuseColor(Color.BLACK);
+      return this;
+    }
+
+    @Override
+    public ShapeFx setDiffuseMap(BufferedImage image) {
+      material.setDiffuseMap(imageCache.computeIfAbsent(image, EngineFx::loadImg));
       return this;
     }
 

@@ -33,7 +33,7 @@ public class SketchBumpReflection {
     //obj1bump.getGraphics().drawImage(normalMapExampleWithSceneAndResult, -2048, 2048, 2048 * 3, -2048, null);
     //try { ImageIO.write(obj1bump, "png", new File("assets/test.png")); } catch (IOException ignore) {}
     Obj obj1 = new Shapes.Square();
-    //obj1.image = Obj.image(Paths.get("assets/maptest.png"));
+    //BufferedImage obj1image = Obj.image(Paths.get("assets/maptest.png"));
     //obj1.texture = new double[]{1, 0.5, 0.5, 1, 0, 0.5, 0.5, 0,};
 
     // https://commons.wikimedia.org/wiki/File:NormalMaps.png
@@ -45,7 +45,6 @@ public class SketchBumpReflection {
     BufferedImage obj2image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
     obj2image.getGraphics().drawImage(normalMaps, 512, 0, -3 * 512, 512, null);
     Obj obj2 = Obj.load(Engine3d.class.getResourceAsStream("blender_uv_sphere.obj")).interpolateNormal(); // HD sphere
-    obj2.image = obj2image;
 
     Dimension screenSize = new Dimension(640, 360);
     BufferedImage background = new BufferedImage(screenSize.width, screenSize.height, BufferedImage.TYPE_INT_ARGB);
@@ -54,8 +53,8 @@ public class SketchBumpReflection {
     SceneViewer sceneViewer = new SceneViewer(engine3d, screenSize);
     BufferedImage photosphere = Obj.image(Paths.get("assets/reflection_sphere.jpg"));
     engine3d.shape(Obj.load(Engine3d.class.getResourceAsStream("blender_uv_sphere.obj"))
-        .interpolateNormal().scale(95).ry90().inverted()
-        .withImage(photosphere)).selfIllumination(-1).connect(sceneViewer.sky);
+        .interpolateNormal().scale(95).ry90().inverted())
+        .setDiffuseMap(photosphere).selfIllumination(-1).connect(sceneViewer.sky);
 
 //    engine3d.shape(obj1).setBumpMap(obj1bump).setReflectionMap(photosphere, 0.3, sceneViewer.sky).setSpecular(-1, 100).connect(sceneViewer.node);
     Obj obj = Obj.load(Engine3d.class.getResourceAsStream("blender_uv_sphere.obj")).interpolateNormal();

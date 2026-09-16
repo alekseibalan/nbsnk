@@ -90,6 +90,8 @@ public interface Engine3d extends AutoCloseable {
 
     Shape selfIllumination(int color);
 
+    Shape setDiffuseMap(BufferedImage image);
+
     // although it is a normal map, the word bump makes it instantly understood
     Shape setBumpMap(BufferedImage image);
 

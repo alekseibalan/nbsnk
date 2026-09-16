@@ -106,9 +106,8 @@ public class Sketch2 {
     }
   }
 
-  public static Obj photosphere(String imageFile, double size) {
+  public static Obj photosphere(double size) {
     Obj sphere = obj("assets/blender_uv_sphere.obj");
-    sphere.image = img(imageFile);
     // invert normals
     for (int i = 0; i < sphere.face.length; i += 9) {
       int v = sphere.face[i + 3];
@@ -137,11 +136,13 @@ public class Sketch2 {
     //Obj.flatNormal(teapot);
     Obj cow = obj("assets/cow.obj");
     Obj.fixNormal(cow);
-    cow.image = img("assets/cow.png");
+    BufferedImage cowImage = img("assets/cow.png");
     boolean useSphere = false;
     Obj sphere = null;
+    BufferedImage sphereImage = null;
     if (useSphere) {
-      sphere = photosphere("assets/photosphere.jpg", 80);
+      sphere = photosphere(80);
+      sphereImage = img("assets/photosphere.jpg");
     }
 
     Screen screen = new Screen();
@@ -165,14 +166,14 @@ public class Sketch2 {
     engine3d.shape(teapot).translation(-10, 0, -40).rotation(0.0, 0.1, 0.0); // positive pitch
     engine3d.shape(teapot).setSpecular(0xFFFFFFFF, 20).translation(-10, -4, -40).rotation(0.1, 0.0, 0.0); // positive yaw
     engine3d.shape(teapot).setSpecular(0xFF0000FF, 1).translation(-10, -8, -40).rotation(0.25, 0.1, 0.0); // yaw 1/4 then pitch
-    engine3d.shape(cow).setSpecular(0xFF003FFF, 20).translation(5, 4, -20);
+    engine3d.shape(cow).setDiffuseMap(cowImage).setSpecular(0xFF003FFF, 20).translation(5, 4, -20);
     engine3d.shape(teapot).translation(10, 4, -40).rotation(0.25, 0.0, 0.1); // yaw 1/4 then roll
     engine3d.shape(teapot).translation(10, 0, -40).rotation(0.0, 0.25, 0.25); // pitch 1/4 then roll 1/4
     Engine3d.Shape sphere0 = null;
-    if (useSphere) sphere0 = engine3d.shape(sphere).selfIllumination(-1);
+    if (useSphere) sphere0 = engine3d.shape(sphere).setDiffuseMap(sphereImage).selfIllumination(-1);
     Engine3d.Node t9 = engine3d.shape(teapot).translation(10, -8, -40);
     // pivot test
-    Engine3d.Node superCow = engine3d.shape(cow).setColor(0xFF80FF40).translation(5, 0, 0).rotation(0.5, 0, 0).setPivot()
+    Engine3d.Node superCow = engine3d.shape(cow).setDiffuseMap(cowImage).setColor(0xFF80FF40).translation(5, 0, 0).rotation(0.5, 0, 0).setPivot()
         .translation(0, -4, 0).rotation(0, 0.5, 0.5).setPivot().translation(0, 0, -20);
     // more cubes
     engine3d.shape(cube).translation(20, 0, 0);
@@ -181,7 +182,8 @@ public class Sketch2 {
     // light
     engine3d.light().setColor(-1).translation(-100, 0, 15);
     Engine3d.Node light1 = engine3d.light().setColor(0xFFFFFF00).translation(0, 0, -20);
-    Engine3d.Shape light1o = engine3d.shape(new Shapes.Icosahedron()).selfIllumination(0xFFFFFF00);
+    Engine3d.Shape light1o = engine3d.shape(new Shapes.Icosahedron())
+        .setDiffuseMap(Shapes.image()).selfIllumination(0xFFFFFF00);
 
     // legacy test
     Engine3d.Shape c0 = engine3d.shape(cube);

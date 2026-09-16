@@ -170,6 +170,11 @@ public class EngineLw implements Engine3d {
     }
 
     @Override
+    public ShapeLw setDiffuseMap(BufferedImage image) {
+      return this;
+    }
+
+    @Override
     public ShapeLw setBumpMap(BufferedImage image) {
       return this;
     }
