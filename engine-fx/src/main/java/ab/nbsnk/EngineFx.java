@@ -318,16 +318,6 @@ public class EngineFx implements Engine3d {
       return this;
     }
 
-    @Override
-    public NodeFx setPivot() {
-      t = new Translate();
-      rx = new Rotate(0.0, Rotate.X_AXIS);
-      ry = new Rotate(0.0, Rotate.Y_AXIS);
-      rz = new Rotate(0.0, Rotate.Z_AXIS);
-      node.getTransforms().addAll(0, List.of(t, ry, rx, rz)); // add a new empty transformation
-      return this;
-    }
-
     private void connect(javafx.scene.Group group) {
       this.group.getChildren().remove(this.node);
       this.group = group;

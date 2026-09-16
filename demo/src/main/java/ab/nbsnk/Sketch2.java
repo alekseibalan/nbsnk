@@ -173,8 +173,20 @@ public class Sketch2 {
     if (useSphere) sphere0 = engine3d.shape(sphere).setDiffuseMap(sphereImage).selfIllumination(-1);
     Engine3d.Node t9 = engine3d.shape(teapot).translation(10, -8, -40);
     // pivot test
-    Engine3d.Node superCow = engine3d.shape(cow).setDiffuseMap(cowImage).setColor(0xFF80FF40).translation(5, 0, 0).rotation(0.5, 0, 0).setPivot()
-        .translation(0, -4, 0).rotation(0, 0.5, 0.5).setPivot().translation(0, 0, -20);
+    //Engine3d.Node superCow = engine3d.shape(cow).setDiffuseMap(cowImage)
+    //    .setColor(0xFF80FF40).translation(5, 0, 0).rotation(0.5, 0, 0).setPivot()
+    //    .translation(0, -4, 0).rotation(0, 0.5, 0.5).setPivot().translation(0, 0, -20);
+    // pivoting was resetting the zero point (origin), it can be achieved by creating a new group
+    // and connecting the current node to it, therefore deprecated
+    Engine3d.Node sc1 = engine3d.shape(cow).setDiffuseMap(cowImage)
+        .setColor(0xFF80FF40).translation(5, 0, 0).rotation(0.5, 0, 0);
+    Engine3d.Group sc2 = engine3d.group();
+    sc1.connect(sc2);
+    sc2.translation(0, -4, 0).rotation(0, 0.5, 0.5);
+    Engine3d.Group sc3 = engine3d.group();
+    sc2.connect(sc3);
+    sc3.translation(0, 0, -20);
+    Engine3d.Group superCow = sc3;
     // more cubes
     engine3d.shape(cube).translation(20, 0, 0);
     engine3d.shape(cube).translation(-20, 0, 0);

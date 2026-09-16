@@ -248,7 +248,6 @@ public class EngineNbs implements Engine3d {
 
   private class NodeNbs implements Node {
     private Set<NodeNbs> group;
-    private Matrix pivot = IDENTITY;
     private double tx;
     private double ty;
     private double tz;
@@ -276,16 +275,8 @@ public class EngineNbs implements Engine3d {
       return this;
     }
 
-    @Override
-    public NodeNbs setPivot() {
-      pivot = this.multiply(IDENTITY);
-      tx = 0; ty = 0; tz = 0;
-      rx = 0; ry = 0; rz = 0;
-      return this;
-    }
-
     private Matrix multiply(Matrix matrix) {
-      return EngineNbs.multiply(matrix, this.tx, this.ty, this.tz, this.rx, this.ry, this.rz).times(this.pivot);
+      return EngineNbs.multiply(matrix, this.tx, this.ty, this.tz, this.rx, this.ry, this.rz).times(IDENTITY);
     }
 
     @Override

@@ -214,13 +214,6 @@ public class EngineDual implements Engine3d {
     }
 
     @Override
-    public NodeDual setPivot() {
-      nodeLeft.setPivot();
-      nodeRight.setPivot();
-      return this;
-    }
-
-    @Override
     public NodeDual connect(Group node) {
       NodeDual nodeDual = (GroupDual) node;
       nodeLeft.connect((Group) nodeDual.nodeLeft);

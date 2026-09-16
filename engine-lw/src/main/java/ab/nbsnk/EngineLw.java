@@ -138,11 +138,6 @@ public class EngineLw implements Engine3d {
     }
 
     @Override
-    public NodeLw setPivot() {
-      return this;
-    }
-
-    @Override
     public NodeLw connect(Group node) {
       return this;
     }
