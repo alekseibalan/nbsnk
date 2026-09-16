@@ -17,37 +17,44 @@
 
 package ab.nbsnk.opengl;
 
+import ab.nbsnk.Obj;
+
+import java.nio.file.Paths;
+
 import static org.lwjgl.opengl.GL33C.*;
 
 // FIXME: 2026-09-16 slop
 public class LwDemo implements AutoCloseable {
-  public static final String SCENE_VERT = "#version 330\n" +
+  public static final String VS = "#version 330\n" +
       "\n" +
-      "layout (location=0) in vec3 inPosition;\n" +
+      "layout (location=0) in vec3 position;\n" +
+      "layout (location=1) in vec3 color;\n" +
+      "\n" +
+      "out vec3 outColor;\n" +
       "\n" +
       "void main()\n" +
       "{\n" +
-      "    gl_Position = vec4(inPosition, 1.0);\n" +
+      "    gl_Position = vec4(position, 1.0);\n" +
+      "    outColor = color;\n" +
       "}";
-  public static final String SCENE_FRAG = "#version 330\n" +
+  public static final String FS = "#version 330\n" +
       "\n" +
+      "in  vec3 outColor;\n" +
       "out vec4 fragColor;\n" +
       "\n" +
       "void main()\n" +
       "{\n" +
-      "    fragColor = vec4(0.0, 1.0, 1.0, 1.0);\n" +
+      "    fragColor = vec4(outColor, 1.0);\n" +
       "}";
   Mesh mesh;
   Program program;
 
   public LwDemo() {
-    float[] positions = new float[]{
-        0.0f, 0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f
-    };
-    mesh = new Mesh(positions);
-    program = new Program(SCENE_VERT, SCENE_FRAG);
+    Obj obj = Obj.load(Paths.get("assets/teapot.obj"));
+    float[] vertex = new float[obj.vertex.length];
+    for (int i = 0; i < vertex.length; i++) vertex[i] = (float) obj.vertex[i] / 4f;
+    mesh = new Mesh(vertex, Obj.copy(obj.face));
+    program = new Program(VS, FS);
   }
 
   @Override

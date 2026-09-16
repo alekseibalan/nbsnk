@@ -17,6 +17,10 @@
 
 package ab.nbsnk.opengl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import static org.lwjgl.opengl.GL33C.*;
 
 // FIXME: 2026-09-16 slop
@@ -24,30 +28,48 @@ public class Mesh implements AutoCloseable {
 
     private int points;
     private int vertexArray;
-    private int buffer;
+    private List<Integer> buffers = new ArrayList<>();
 
-    public Mesh(float[] points) {
-        this.points = points.length / 3;
+    public Mesh(float[] vertex, int[] face) {
+        float[] colors = new float[vertex.length];
+        Random random = new Random(0);
+        for (int i = 0; i < colors.length; i++) colors[i] = random.nextFloat();
+        this.points = face.length;
         vertexArray = glGenVertexArrays();
         glBindVertexArray(vertexArray);
-        buffer = glGenBuffers();
+
+        int buffer = glGenBuffers();
+        buffers.add(buffer);
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ARRAY_BUFFER, points, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, vertex, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+
+        buffer = glGenBuffers();
+        buffers.add(buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
+
+        buffer = glGenBuffers();
+        buffers.add(buffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, face, GL_STATIC_DRAW);
+
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
 
     @Override
     public void close() {
-        glDeleteBuffers(buffer);
+        for (int buffer : buffers) glDeleteBuffers(buffer);
         glDeleteVertexArrays(vertexArray);
     }
 
     public void draw() {
         glBindVertexArray(vertexArray);
-        glDrawArrays(GL_TRIANGLES, 0, points);
+        glDrawElements(GL_TRIANGLES, points, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
 }
