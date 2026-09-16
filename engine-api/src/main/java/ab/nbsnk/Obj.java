@@ -324,4 +324,15 @@ public class Obj implements Cloneable {
     return this;
   }
 
+  public static int[] copy(int[] data) {
+    return data == null ? null : Arrays.copyOf(data, data.length);
+  }
+
+  public static float[] copy(double[] data) {
+    if (data == null) return null;
+    float[] floats = new float[data.length];
+    for (int i = 0; i < floats.length; i++) floats[i] = (float) data[i];
+    return floats;
+  }
+
 }

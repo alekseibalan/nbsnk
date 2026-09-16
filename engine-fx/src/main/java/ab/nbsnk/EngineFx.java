@@ -39,9 +39,7 @@ import javafx.stage.Stage;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -50,7 +48,7 @@ import java.util.function.Supplier;
 
 /**
  * https://openjfx.io/javadoc/24/javafx.graphics/javafx/scene/paint/PhongMaterial.html
- * JavaFx limitations:
+ * JavaFx right y down, limitations:
  * No light attenuation with distance
  * No shadows
  * Missing setSelfIlluminationColor method that can change the brightness or color
@@ -74,33 +72,11 @@ public class EngineFx implements Engine3d {
   private PerspectiveCamera perspectiveCamera;
 
   public static TriangleMesh loadObj(Obj obj) {
-    int[] faces = Arrays.copyOf(obj.face, obj.face.length);
-    float[] points = new float[obj.vertex.length];
-    for (int i = 0; i < points.length; i += 3) {
-      points[i] = (float) obj.vertex[i];
-      points[i + 1] = (float) -obj.vertex[i + 1];
-      points[i + 2] = (float) -obj.vertex[i + 2];
-    }
-    float[] normals = new float[obj.normal.length];
-    for (int i = 0; i < normals.length; i += 3) {
-      normals[i] = (float) obj.normal[i];
-      normals[i + 1] = (float) -obj.normal[i + 1];
-      normals[i + 2] = (float) -obj.normal[i + 2];
-    }
-    float[] texCoords = new float[2];
-    if (obj.texture != null) {
-      texCoords = new float[obj.texture.length];
-      for (int i = 0; i < texCoords.length; i += 2) {
-        texCoords[i] = (float) obj.texture[i];
-        texCoords[i + 1] = (float) (obj.texture[i + 1]); // do not flip Y, flip the image instead
-      }
-    }
-
     TriangleMesh mesh = new TriangleMesh(VertexFormat.POINT_NORMAL_TEXCOORD);
-    mesh.getPoints().addAll(points);
-    mesh.getTexCoords().addAll(texCoords);
-    mesh.getFaces().addAll(faces);
-    mesh.getNormals().addAll(normals);
+    mesh.getPoints().addAll(Obj.copy(obj.vertex));
+    mesh.getTexCoords().addAll(Obj.copy(obj.texture));
+    mesh.getFaces().addAll(Obj.copy(obj.face));
+    mesh.getNormals().addAll(Obj.copy(obj.normal));
     return mesh;
   }
 
@@ -151,7 +127,9 @@ public class EngineFx implements Engine3d {
     this.root = new javafx.scene.Group(this.ambientLight);
     this.perspectiveCamera = new PerspectiveCamera(true);
     this.perspectiveCamera.setFieldOfView(Math.atan2(24.0 / 2, 50.0) * 2 / (Math.PI * 2) * 360); // 50mm full frame
-    this.camera = new NodeFx(this.perspectiveCamera);
+    GroupFx camera = new GroupFx();
+    new NodeFx(this.perspectiveCamera).rotation(0, 0.5, 0).connect(camera); // make it right y up
+    this.camera = camera;
   }
 
   @Override
@@ -305,16 +283,16 @@ public class EngineFx implements Engine3d {
     @Override
     public NodeFx translation(double x, double y, double z) {
       t.setX(x);
-      t.setY(-y);
-      t.setZ(-z);
+      t.setY(y);
+      t.setZ(z);
       return this;
     }
 
     @Override
     public NodeFx rotation(double y, double p, double r) {
-      ry.setAngle(y * 360); // negative, the yaw axis directed towards the bottom, multiply by negative, y axis flipped
+      ry.setAngle(-y * 360);
       rx.setAngle(p * 360);
-      rz.setAngle(r * 360); // negative, the longitudinal axis directed forward, multiply by negative, z axis flipped
+      rz.setAngle(-r * 360);
       return this;
     }
 
