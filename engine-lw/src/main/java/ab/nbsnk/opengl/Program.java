@@ -17,8 +17,12 @@
 
 package ab.nbsnk.opengl;
 
+import org.joml.Matrix4f;
+
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.lwjgl.opengl.GL33C.*;
 
@@ -26,8 +30,9 @@ import static org.lwjgl.opengl.GL33C.*;
 public class Program implements AutoCloseable {
 
     final int program;
+    Map<String, Integer> uniforms = new LinkedHashMap<>();
 
-    public Program(String vs, String fs) {
+    public Program(String vs, String fs, String... uniforms) {
         program = glCreateProgram();
         if (program == 0) throw new IllegalStateException();
         List<Integer> shaders = new ArrayList<>();
@@ -37,16 +42,33 @@ public class Program implements AutoCloseable {
         if (glGetProgrami(program, GL_LINK_STATUS) == 0) throw new IllegalStateException();
         for (int shader : shaders) glDetachShader(program, shader);
         for (int shader : shaders) glDeleteShader(shader);
+        for (String uniform : uniforms) {
+            int uniformLocation = glGetUniformLocation(program, uniform);
+            if (uniformLocation < 0) throw new IllegalStateException();
+            this.uniforms.put(uniform, uniformLocation);
+        }
     }
 
     @Override
     public void close() {
         glUseProgram(0);
         glDeleteProgram(program);
+        uniforms = null;
     }
 
-    public void use() {
+    public void use(Matrix4f... values) {
         glUseProgram(program);
+        float[] floats = new float[16];
+        int i = 0;
+        for (int uniform : uniforms.values()) {
+            if (i >= values.length) break;
+            glUniformMatrix4fv(uniform, false, values[i++].get(floats));
+        }
+    }
+
+    public void setUniform(String uniformName, Matrix4f value) {
+        float[] floats = new float[16];
+        glUniformMatrix4fv(uniforms.get(uniformName), false, value.get(floats));
     }
 
     int createShader(String source, int type) {
