@@ -31,6 +31,9 @@ public class Mesh implements AutoCloseable {
     private List<Integer> buffers = new ArrayList<>();
 
     public Mesh(float[] vertex, int[] face) {
+        int[] f = new int[face.length / 3];
+        for (int i = 0; i < f.length; i++) f[i] = face[i * 3];
+        face = f;
         float[] colors = new float[vertex.length];
         Random random = new Random(0);
         for (int i = 0; i < colors.length; i++) colors[i] = random.nextFloat();

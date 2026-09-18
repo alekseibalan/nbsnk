@@ -52,7 +52,7 @@ public class LwDemo implements AutoCloseable {
       "    fragColor = vec4(outColor, 1.0);\n" +
       "}";
   Mesh mesh;
-  Program program;
+  public Program program;
   Matrix4f projectionMatrix = new Matrix4f()
       .setPerspective((float) Math.toRadians(60.0f), (float) 4 / 3, 0.01f, 1000.f);
   Matrix4f modelMatrix = new Matrix4f().identity();
@@ -63,7 +63,7 @@ public class LwDemo implements AutoCloseable {
     float[] vertex = new float[obj.vertex.length];
     for (int i = 0; i < vertex.length; i++) vertex[i] = (float) obj.vertex[i] / 4f;
     mesh = new Mesh(vertex, Obj.copy(obj.face));
-    program = new Program(VS, FS, "projectionMatrix", "modelMatrix", "viewMatrix");
+    program = new Program(VS, FS, "projectionMatrix", "viewMatrix", "modelMatrix");
   }
 
   @Override
@@ -75,7 +75,7 @@ public class LwDemo implements AutoCloseable {
   public void draw() {
     glClearColor(0.5f, 0.5f, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    program.use(projectionMatrix, modelMatrix, viewMatrix);
+    program.use(projectionMatrix, viewMatrix, modelMatrix);
     mesh.draw();
   }
 }

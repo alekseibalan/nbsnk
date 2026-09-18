@@ -18,14 +18,24 @@
 package ab.nbsnk;
 
 import ab.nbsnk.opengl.LwDemo;
+import ab.nbsnk.opengl.Mesh;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.lwjgl.opengl.GL33C.*;
 
+/**
+ * OpenGL right y up
+ */
 public class EngineLw implements Engine3d {
 
   public static final boolean FLIP_Y = true;
@@ -35,6 +45,9 @@ public class EngineLw implements Engine3d {
   private long windowHandle;
   private int[] pixelInts;
   LwDemo lwDemo;
+  private NodeLw camera;
+  GroupLw group = new GroupLw(null);
+  private Matrix4f projectionMatrix;
 
   @Override
   public EngineLw open(BufferedImage image) {
@@ -48,8 +61,13 @@ public class EngineLw implements Engine3d {
     windowHandle = GLFW.glfwCreateWindow(screenWidth, screenHeight, "", 0, 0);
     GLFW.glfwMakeContextCurrent(windowHandle);
     GL.createCapabilities();
+    glEnable(GL_DEPTH_TEST);
     pixelInts = new int[screenWidth * (FLIP_Y ? 1: screenHeight)];
     lwDemo = new LwDemo();
+    camera = new NodeLw(null);
+    projectionMatrix = new Matrix4f().setPerspective(
+        (float) Math.toRadians(Math.atan2(24.0 / 2, 50.0) * 2 / (Math.PI * 2) * 360),
+        (float) screenWidth / screenHeight, 0.01f, 100000.f);
     return this;
   }
 
@@ -69,17 +87,17 @@ public class EngineLw implements Engine3d {
 
   @Override
   public ShapeLw shape(Obj obj) {
-    return new ShapeLw();
+    return new ShapeLw(group, obj);
   }
 
   @Override
   public GroupLw group() {
-    return new GroupLw();
+    return new GroupLw(group);
   }
 
   @Override
   public LightLw light() {
-    return new LightLw();
+    return new LightLw(group);
   }
 
   @Override
@@ -89,7 +107,7 @@ public class EngineLw implements Engine3d {
 
   @Override
   public NodeLw camera() {
-    return new NodeLw();
+    return camera;
   }
 
   @Override
@@ -102,9 +120,31 @@ public class EngineLw implements Engine3d {
     return this;
   }
 
+  private static void dfs(Set<NodeLw> nodes, Matrix4f tm, Map<NodeLw, Matrix4f> map) {
+    for (NodeLw node : nodes) {
+      if (!node.visible) continue;
+      Matrix4f t = new Matrix4f(tm).mul(node.matrix);
+      if (node instanceof GroupLw) {
+        dfs(((GroupLw) node).nodes, t, map);
+        continue;
+      }
+      map.put(node, t);
+    }
+  }
+
   @Override
   public void update() {
-    lwDemo.draw();
+    glClearColor(0.5f, 0.5f, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    Map<NodeLw, Matrix4f> map = new HashMap<>();
+    dfs(group.nodes, new Matrix4f().identity(), map);
+    Matrix4f cameraMatrix = new Matrix4f(camera.matrix).invert();
+    for (Map.Entry<NodeLw, Matrix4f> entry : map.entrySet()) {
+      if (!(entry.getKey() instanceof ShapeLw)) continue;
+      lwDemo.program.use(projectionMatrix, cameraMatrix, entry.getValue());
+      ((ShapeLw) entry.getKey()).mesh.draw();
+    }
+
     if (FLIP_Y) {
       for (int i = 0, j = screenHeight - 1; i < screenHeight; i++, j--) {
         glReadPixels(0, i, screenWidth, 1, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixelInts);
@@ -127,28 +167,58 @@ public class EngineLw implements Engine3d {
   }
 
   public static class NodeLw implements Node {
+    Matrix4f matrix = new Matrix4f();
+    Vector3f translation = new Vector3f();
+    Vector3f rotation = new Vector3f();
+    boolean visible = true;
+    GroupLw group;
+
+    public NodeLw(GroupLw group) {
+      this.group = group;
+      if (group != null) group.nodes.add(this);
+    }
+
     @Override
     public NodeLw translation(double x, double y, double z) {
+      translation.set(x, y, z);
+      update();
       return this;
+    }
+
+    void update() {
+      matrix.translation(translation).rotateYXZ(rotation);
     }
 
     @Override
     public NodeLw rotation(double yaw, double pitch, double roll) {
+      rotation.set((float) (2 * Math.PI * pitch), (float) (-2 * Math.PI * yaw), (float) (-2 * Math.PI * roll));
+      update();
       return this;
     }
 
     @Override
     public NodeLw connect(Group node) {
+      group.nodes.remove(this);
+      group = (GroupLw) node;
+      group.nodes.add(this);
       return this;
     }
 
     @Override
     public NodeLw setVisible(boolean value) {
+      visible = value;
       return this;
     }
   }
 
   public static class ShapeLw extends NodeLw implements Shape {
+    private Mesh mesh;
+
+    public ShapeLw(GroupLw group, Obj obj) {
+      super(group);
+      mesh = new Mesh(Obj.copy(obj.vertex), Obj.copy(obj.face));
+    }
+
     @Override
     public ShapeLw setColor(int color) {
       return this;
@@ -181,10 +251,18 @@ public class EngineLw implements Engine3d {
   }
 
   public static class GroupLw extends NodeLw implements Group {
+    public GroupLw(GroupLw group) {
+      super(group);
+    }
 
+    private Set<NodeLw> nodes = new LinkedHashSet<>();
   }
 
   public static class LightLw extends NodeLw implements Light {
+    public LightLw(GroupLw group) {
+      super(group);
+    }
+
     @Override
     public LightLw setColor(int color) {
       return this;
