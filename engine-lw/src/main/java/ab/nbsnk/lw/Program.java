@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ab.nbsnk.opengl;
+package ab.nbsnk.lw;
 
 import org.joml.Matrix4f;
 

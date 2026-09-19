@@ -15,9 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ab.nbsnk.opengl;
+package ab.nbsnk;
 
-import ab.nbsnk.Obj;
+import ab.nbsnk.lw.Mesh;
+import ab.nbsnk.lw.Program;
 import org.joml.Matrix4f;
 
 import java.nio.file.Paths;
