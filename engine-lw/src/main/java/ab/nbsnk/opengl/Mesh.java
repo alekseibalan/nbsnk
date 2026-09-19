@@ -17,62 +17,63 @@
 
 package ab.nbsnk.opengl;
 
+import ab.nbsnk.Obj;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import static org.lwjgl.opengl.GL33C.*;
 
-// FIXME: 2026-09-16 slop
 public class Mesh implements AutoCloseable {
 
-    private int points;
-    private int vertexArray;
-    private List<Integer> buffers = new ArrayList<>();
+  private int points;
+  private int vertexArray;
+  private List<Integer> buffers = new ArrayList<>();
 
-    public Mesh(float[] vertex, int[] face) {
-        int[] f = new int[face.length / 3];
-        for (int i = 0; i < f.length; i++) f[i] = face[i * 3];
-        face = f;
-        float[] colors = new float[vertex.length];
-        Random random = new Random(0);
-        for (int i = 0; i < colors.length; i++) colors[i] = random.nextFloat();
-        this.points = face.length;
-        vertexArray = glGenVertexArrays();
-        glBindVertexArray(vertexArray);
+  public Mesh(Obj obj) {
+    float[] vertex = Obj.copy(obj.vertex);
+    int[] face = new int[obj.face.length / 3];
+    for (int i = 0; i < face.length; i++) face[i] = obj.face[i * 3];
+    float[] colors = new float[vertex.length];
+    Random random = new Random(0);
+    for (int i = 0; i < colors.length; i++) colors[i] = random.nextFloat();
+    this.points = face.length;
+    vertexArray = glGenVertexArrays();
+    glBindVertexArray(vertexArray);
 
-        int buffer = glGenBuffers();
-        buffers.add(buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ARRAY_BUFFER, vertex, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    int buffer = glGenBuffers();
+    buffers.add(buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, vertex, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
-        buffer = glGenBuffers();
-        buffers.add(buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
+    buffer = glGenBuffers();
+    buffers.add(buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
 
-        buffer = glGenBuffers();
-        buffers.add(buffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, face, GL_STATIC_DRAW);
+    buffer = glGenBuffers();
+    buffers.add(buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, face, GL_STATIC_DRAW);
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+  }
 
-    @Override
-    public void close() {
-        for (int buffer : buffers) glDeleteBuffers(buffer);
-        glDeleteVertexArrays(vertexArray);
-    }
+  @Override
+  public void close() {
+    for (int buffer : buffers) glDeleteBuffers(buffer);
+    glDeleteVertexArrays(vertexArray);
+  }
 
-    public void draw() {
-        glBindVertexArray(vertexArray);
-        glDrawElements(GL_TRIANGLES, points, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-    }
+  public void draw() {
+    glBindVertexArray(vertexArray);
+    glDrawElements(GL_TRIANGLES, points, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+  }
 }

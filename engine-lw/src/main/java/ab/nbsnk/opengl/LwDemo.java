@@ -26,44 +26,16 @@ import static org.lwjgl.opengl.GL33C.*;
 
 // FIXME: 2026-09-16 slop
 public class LwDemo implements AutoCloseable {
-  public static final String VS = "#version 330\n" +
-      "\n" +
-      "layout (location=0) in vec3 position;\n" +
-      "layout (location=1) in vec3 color;\n" +
-      "\n" +
-      "out vec3 outColor;\n" +
-      "\n" +
-      "uniform mat4 projectionMatrix;\n" +
-      "uniform mat4 viewMatrix;\n" +
-      "uniform mat4 modelMatrix;\n" +
-      "\n" +
-      "void main()\n" +
-      "{\n" +
-      "    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);\n" +
-      "    outColor = color;\n" +
-      "}";
-  public static final String FS = "#version 330\n" +
-      "\n" +
-      "in  vec3 outColor;\n" +
-      "out vec4 fragColor;\n" +
-      "\n" +
-      "void main()\n" +
-      "{\n" +
-      "    fragColor = vec4(outColor, 1.0);\n" +
-      "}";
   Mesh mesh;
-  public Program program;
+  Program program;
   Matrix4f projectionMatrix = new Matrix4f()
       .setPerspective((float) Math.toRadians(60.0f), (float) 4 / 3, 0.01f, 1000.f);
   Matrix4f modelMatrix = new Matrix4f().identity();
   Matrix4f viewMatrix = new Matrix4f().identity().translate(0, 0, -5);
 
   public LwDemo() {
-    Obj obj = Obj.load(Paths.get("assets/teapot.obj"));
-    float[] vertex = new float[obj.vertex.length];
-    for (int i = 0; i < vertex.length; i++) vertex[i] = (float) obj.vertex[i] / 4f;
-    mesh = new Mesh(vertex, Obj.copy(obj.face));
-    program = new Program(VS, FS, "projectionMatrix", "viewMatrix", "modelMatrix");
+    mesh = new Mesh(Obj.load(Paths.get("assets/teapot.obj")));
+    program = Program.newDefault();
   }
 
   @Override

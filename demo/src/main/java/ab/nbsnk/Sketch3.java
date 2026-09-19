@@ -102,7 +102,7 @@ public class Sketch3 {
     screen.image = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_RGB);
     screen.preferredSize = new Dimension(screenWidth, screenHeight);
     FpsMeter fpsMeter = new FpsMeter();
-    engine3d = new EngineFx().open(screen.image).setFarClip(FAR_CLIP).setAmbient(0xFF000022)
+    engine3d = new EngineLw().open(screen.image).setFarClip(FAR_CLIP).setAmbient(0xFF000022)
         .textSupplier(() -> String.format("fps: %.0f", fpsMeter.getFps()));
     horizon = engine3d.group();
     moon = (Engine3d.Group) engine3d.group().connect(horizon);
@@ -148,6 +148,7 @@ public class Sketch3 {
     Queue<String> keyListener = new LinkedBlockingQueue<>();
     screen.keyListener = keyListener::add;
 
+    engine3d.sysex(0);
     RenderLoop renderLoop = new RenderLoop();
     Thread renderLoopThread = new Thread(renderLoop);
     renderLoopThread.start();
@@ -159,7 +160,7 @@ public class Sketch3 {
 //    double playerX = 0;
 //    double playerZ = 0;
     Particle player = new Particle(GRAVITY);
-    System.out.println((System.nanoTime() - nanoTime) / 1_000_000);
+    //System.out.println((System.nanoTime() - nanoTime) / 1_000_000);
     while (!systemExit) {
       LinkedHashMap<Engine3d.Node, Tr> world = new LinkedHashMap<>();
       boolean[] mouseClick = new boolean[10];
@@ -414,6 +415,7 @@ public class Sketch3 {
     Map<Engine3d.Node, Tr> world = Collections.emptyMap();
     @Override
     public void run() {
+      engine3d.sysex(1);
       Graphics graphics = screen.image.getGraphics();
       while (!systemExit) {
         Map<Engine3d.Node, Tr> world = this.world;

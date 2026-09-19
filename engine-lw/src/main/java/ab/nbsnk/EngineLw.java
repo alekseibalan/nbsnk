@@ -17,8 +17,8 @@
 
 package ab.nbsnk;
 
-import ab.nbsnk.opengl.LwDemo;
 import ab.nbsnk.opengl.Mesh;
+import ab.nbsnk.opengl.Program;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
@@ -44,7 +44,7 @@ public class EngineLw implements Engine3d {
   private BufferedImage screenImage;
   private long windowHandle;
   private int[] pixelInts;
-  LwDemo lwDemo;
+  Program program;
   private NodeLw camera;
   GroupLw group = new GroupLw(null);
   private Matrix4f projectionMatrix;
@@ -63,7 +63,7 @@ public class EngineLw implements Engine3d {
     GL.createCapabilities();
     glEnable(GL_DEPTH_TEST);
     pixelInts = new int[screenWidth * (FLIP_Y ? 1: screenHeight)];
-    lwDemo = new LwDemo();
+    program = Program.newDefault();
     camera = new NodeLw(null);
     projectionMatrix = new Matrix4f().setPerspective(
         (float) Math.toRadians(Math.atan2(24.0 / 2, 50.0) * 2 / (Math.PI * 2) * 360),
@@ -74,7 +74,7 @@ public class EngineLw implements Engine3d {
   @Override
   public void close() {
     if (windowHandle == 0) return;
-    lwDemo.close();
+    program.close();
     GLFW.glfwDestroyWindow(windowHandle);
     GLFW.glfwTerminate();
     windowHandle = 0;
@@ -141,7 +141,7 @@ public class EngineLw implements Engine3d {
     Matrix4f cameraMatrix = new Matrix4f(camera.matrix).invert();
     for (Map.Entry<NodeLw, Matrix4f> entry : map.entrySet()) {
       if (!(entry.getKey() instanceof ShapeLw)) continue;
-      lwDemo.program.use(projectionMatrix, cameraMatrix, entry.getValue());
+      program.use(projectionMatrix, cameraMatrix, entry.getValue());
       ((ShapeLw) entry.getKey()).mesh.draw();
     }
 
@@ -158,7 +158,14 @@ public class EngineLw implements Engine3d {
 
   @Override
   public void sysex(int i) {
-
+    switch (i) {
+      case 0:
+        GLFW.glfwMakeContextCurrent(0);
+        return;
+      case 1:
+        GLFW.glfwMakeContextCurrent(windowHandle);
+        GL.createCapabilities();
+    }
   }
 
   @Override
@@ -216,7 +223,7 @@ public class EngineLw implements Engine3d {
 
     public ShapeLw(GroupLw group, Obj obj) {
       super(group);
-      mesh = new Mesh(Obj.copy(obj.vertex), Obj.copy(obj.face));
+      mesh = new Mesh(obj);
     }
 
     @Override

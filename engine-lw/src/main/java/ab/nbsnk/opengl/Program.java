@@ -19,65 +19,73 @@ package ab.nbsnk.opengl;
 
 import org.joml.Matrix4f;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.function.UnaryOperator;
 
 import static org.lwjgl.opengl.GL33C.*;
 
-// FIXME: 2026-09-16 slop
 public class Program implements AutoCloseable {
 
-    final int program;
-    Map<String, Integer> uniforms = new LinkedHashMap<>();
+  final int program;
+  Map<String, Integer> uniforms = new LinkedHashMap<>();
 
-    public Program(String vs, String fs, String... uniforms) {
-        program = glCreateProgram();
-        if (program == 0) throw new IllegalStateException();
-        List<Integer> shaders = new ArrayList<>();
-        if (vs != null) shaders.add(createShader(vs, GL_VERTEX_SHADER));
-        if (fs != null) shaders.add(createShader(fs, GL_FRAGMENT_SHADER));
-        glLinkProgram(program);
-        if (glGetProgrami(program, GL_LINK_STATUS) == 0) throw new IllegalStateException();
-        for (int shader : shaders) glDetachShader(program, shader);
-        for (int shader : shaders) glDeleteShader(shader);
-        for (String uniform : uniforms) {
-            int uniformLocation = glGetUniformLocation(program, uniform);
-            if (uniformLocation < 0) throw new IllegalStateException();
-            this.uniforms.put(uniform, uniformLocation);
-        }
+  public Program(String vs, String fs, String... uniforms) {
+    program = glCreateProgram();
+    if (program == 0) throw new IllegalStateException();
+    List<Integer> shaders = new ArrayList<>();
+    if (vs != null) shaders.add(createShader(vs, GL_VERTEX_SHADER));
+    if (fs != null) shaders.add(createShader(fs, GL_FRAGMENT_SHADER));
+    glLinkProgram(program);
+    if (glGetProgrami(program, GL_LINK_STATUS) == 0) throw new IllegalStateException();
+    for (int shader : shaders) glDetachShader(program, shader);
+    for (int shader : shaders) glDeleteShader(shader);
+    for (String uniform : uniforms) {
+      int uniformLocation = glGetUniformLocation(program, uniform);
+      if (uniformLocation < 0) throw new IllegalStateException();
+      this.uniforms.put(uniform, uniformLocation);
     }
+  }
 
-    @Override
-    public void close() {
-        glUseProgram(0);
-        glDeleteProgram(program);
-        uniforms = null;
-    }
+  @Override
+  public void close() {
+    glUseProgram(0);
+    glDeleteProgram(program);
+    uniforms = null;
+  }
 
-    public void use(Matrix4f... values) {
-        glUseProgram(program);
-        float[] floats = new float[16];
-        int i = 0;
-        for (int uniform : uniforms.values()) {
-            if (i >= values.length) break;
-            glUniformMatrix4fv(uniform, false, values[i++].get(floats));
-        }
-    }
+  public static Program newDefault() {
+    UnaryOperator<String> r = path -> {
+      try {
+        return new String(Program.class.getResourceAsStream(path).readAllBytes());
+      } catch (IOException | NullPointerException e) {
+        throw new MissingResourceException("", "", path);
+      }
+    };
+    return new Program(r.apply("vs.txt"), r.apply("fs.txt"), "projectionMatrix", "viewMatrix", "modelMatrix");
+  }
 
-    public void setUniform(String uniformName, Matrix4f value) {
-        float[] floats = new float[16];
-        glUniformMatrix4fv(uniforms.get(uniformName), false, value.get(floats));
+  public void use(Matrix4f... values) {
+    glUseProgram(program);
+    float[] floats = new float[16];
+    int i = 0;
+    for (int uniform : uniforms.values()) {
+      if (i >= values.length) break;
+      glUniformMatrix4fv(uniform, false, values[i++].get(floats));
     }
+  }
 
-    int createShader(String source, int type) {
-        int shader = glCreateShader(type);
-        if (shader == 0) throw new IllegalStateException();
-        glShaderSource(shader, source);
-        glCompileShader(shader);
-        if (glGetShaderi(shader, GL_COMPILE_STATUS) == 0) throw new IllegalStateException();
-        glAttachShader(program, shader);
-        return shader;
-    }
+  int createShader(String source, int type) {
+    int shader = glCreateShader(type);
+    if (shader == 0) throw new IllegalStateException();
+    glShaderSource(shader, source);
+    glCompileShader(shader);
+    if (glGetShaderi(shader, GL_COMPILE_STATUS) == 0) throw new IllegalStateException();
+    glAttachShader(program, shader);
+    return shader;
+  }
 }
