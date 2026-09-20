@@ -18,6 +18,7 @@
 package ab.nbsnk.lw;
 
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -66,7 +67,8 @@ public class Program implements AutoCloseable {
         throw new MissingResourceException("", "", path);
       }
     };
-    return new Program(r.apply("vs.txt"), r.apply("fs.txt"), "projectionMatrix", "viewMatrix", "modelMatrix");
+    return new Program(r.apply("vs.txt"), r.apply("fs.txt"), "projectionMatrix", "viewMatrix", "modelMatrix",
+        "material.diffuse");
   }
 
   public void use(Matrix4f... values) {
@@ -88,4 +90,9 @@ public class Program implements AutoCloseable {
     glAttachShader(program, shader);
     return shader;
   }
+
+  public void set(String uniform, Vector4f value) {
+    glUniform4f(uniforms.get(uniform), value.x, value.y, value.z, value.w);
+  }
+
 }

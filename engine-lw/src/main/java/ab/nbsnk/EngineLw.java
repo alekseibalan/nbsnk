@@ -19,6 +19,7 @@ package ab.nbsnk;
 
 import ab.nbsnk.lw.Mesh;
 import ab.nbsnk.lw.Program;
+import ab.nbsnk.lw.Texture;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
@@ -28,6 +29,7 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -48,6 +50,7 @@ public class EngineLw implements Engine3d {
   private NodeLw camera;
   GroupLw group = new GroupLw(null);
   private Matrix4f projectionMatrix;
+  private Map<BufferedImage, Texture> imageCache = new HashMap<>();
 
   @Override
   public EngineLw open(BufferedImage image) {
@@ -142,7 +145,9 @@ public class EngineLw implements Engine3d {
     for (Map.Entry<NodeLw, Matrix4f> entry : map.entrySet()) {
       if (!(entry.getKey() instanceof ShapeLw)) continue;
       program.use(projectionMatrix, cameraMatrix, entry.getValue());
-      ((ShapeLw) entry.getKey()).mesh.draw();
+      ShapeLw shape = (ShapeLw) entry.getKey();
+      Optional.ofNullable(shape.texture).ifPresentOrElse(Texture::bind, Texture::unbind);
+      shape.mesh.draw();
     }
 
     if (FLIP_Y) {
@@ -218,8 +223,9 @@ public class EngineLw implements Engine3d {
     }
   }
 
-  public static class ShapeLw extends NodeLw implements Shape {
+  public class ShapeLw extends NodeLw implements Shape {
     private Mesh mesh;
+    private Texture texture;
 
     public ShapeLw(GroupLw group, Obj obj) {
       super(group);
@@ -243,6 +249,7 @@ public class EngineLw implements Engine3d {
 
     @Override
     public ShapeLw setDiffuseMap(BufferedImage image) {
+      this.texture = imageCache.computeIfAbsent(image, Texture::new);
       return this;
     }
 

@@ -21,7 +21,6 @@ import ab.nbsnk.Obj;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static org.lwjgl.opengl.GL33C.*;
 
@@ -32,12 +31,22 @@ public class Mesh implements AutoCloseable {
   private List<Integer> buffers = new ArrayList<>();
 
   public Mesh(Obj obj) {
-    float[] vertex = Obj.copy(obj.vertex);
-    int[] face = new int[obj.face.length / 3];
-    for (int i = 0; i < face.length; i++) face[i] = obj.face[i * 3];
-    float[] colors = new float[vertex.length];
-    Random random = new Random(0);
-    for (int i = 0; i < colors.length; i++) colors[i] = random.nextFloat();
+    int length = obj.face.length / 3;
+    int[] face = new int[length];
+    float[] vertex = new float[length * 3];
+    float[] texture = new float[length * 2];
+    for (int i = 0, iv = 0, it = 0; i < length; i++) {
+      // FIXME: 2026-09-20 shader must understand obj natively
+      int sv = obj.face[i * 3] * 3;
+      int st = obj.face[i * 3 + 2] * 2;
+      vertex[iv++] = (float) obj.vertex[sv++];
+      vertex[iv++] = (float) obj.vertex[sv++];
+      vertex[iv++] = (float) obj.vertex[sv++];
+      texture[it++] = (float) obj.texture[st++];
+      texture[it++] = (float) (1 - obj.texture[st++]);
+      face[i] = i;
+    }
+
     this.points = face.length;
     vertexArray = glGenVertexArrays();
     glBindVertexArray(vertexArray);
@@ -52,9 +61,9 @@ public class Mesh implements AutoCloseable {
     buffer = glGenBuffers();
     buffers.add(buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, texture, GL_STATIC_DRAW);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
     buffer = glGenBuffers();
     buffers.add(buffer);

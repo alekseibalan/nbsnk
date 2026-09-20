@@ -49,6 +49,7 @@ import java.util.function.Supplier;
 /**
  * https://openjfx.io/javadoc/24/javafx.graphics/javafx/scene/paint/PhongMaterial.html
  * JavaFx right y down, limitations:
+ * 3 light sources
  * No light attenuation with distance
  * No shadows
  * Missing setSelfIlluminationColor method that can change the brightness or color
