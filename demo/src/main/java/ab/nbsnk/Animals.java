@@ -404,7 +404,7 @@ public class Animals {
 
 
   public static Obj apple() {
-    Obj obj = Sketch2.obj("assets/apple.obj"); // width 1.15
+    Obj obj = Obj.load(Paths.get("assets/apple.obj")); // width 1.15
 //    double x0 = 0;
 //    double x1 = 0;
 //    double yx0 = 0;
@@ -427,7 +427,7 @@ public class Animals {
   }
 
   public static BufferedImage imageApple() {
-    return Sketch2.img("assets/apple_texture.png");
+    return Obj.image(Paths.get("assets/apple_texture.png"));
   }
 
   public static BufferedImage appleIcon() {

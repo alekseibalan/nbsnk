@@ -71,7 +71,7 @@ class ShaderTest {
   @Disabled
   @Test
   void testSphere() throws IOException {
-    Obj obj = Obj.load(Files.readAllBytes(Paths.get("../assets/blender_uv_sphere.obj")));
+    Obj obj = Obj.load(Paths.get("../assets/blender_uv_sphere.obj"));
     BufferedImage texture = ImageIO.read(Files.newInputStream(Paths.get("../assets/photosphere.jpg")));
     Obj.interpolateNormal(obj);
     Screen screen = new Screen();
@@ -83,8 +83,8 @@ class ShaderTest {
   @Disabled
   @Test
   void polyhedron() throws IOException {
-    Obj obj = Obj.load(Files.readAllBytes(Paths.get("../assets/polyhedron3.obj")));
-//    obj = Obj.load(Files.readAllBytes(Paths.get("assets/hornet_sphere.obj")));
+    Obj obj = Obj.load(Paths.get("../assets/polyhedron3.obj"));
+//    obj = Obj.load(Paths.get("assets/hornet_sphere.obj"));
     Obj.flatNormal(obj);
     Obj.fixNormal(obj);
     Obj.verify(obj);

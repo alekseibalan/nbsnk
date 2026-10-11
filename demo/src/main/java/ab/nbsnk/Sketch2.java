@@ -34,64 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Sketch2 {
 
-  private static final Obj cube = Obj.load(("" +
-      "# Blender 4.5.3 LTS\n" +
-      "# www.blender.org\n" +
-      "mtllib Untitled.mtl\n" +
-      "o Cube\n" +
-      "v 1.000000 1.000000 -1.000000\n" +
-      "v 1.000000 -1.000000 -1.000000\n" +
-      "v 1.000000 1.000000 1.000000\n" +
-      "v 1.000000 -1.000000 1.000000\n" +
-      "v -1.000000 1.000000 -1.000000\n" +
-      "v -1.000000 -1.000000 -1.000000\n" +
-      "v -1.000000 1.000000 1.000000\n" +
-      "v -1.000000 -1.000000 1.000000\n" +
-      "vn -0.0000 1.0000 -0.0000\n" +
-      "vn -0.0000 -0.0000 1.0000\n" +
-      "vn -1.0000 -0.0000 -0.0000\n" +
-      "vn -0.0000 -1.0000 -0.0000\n" +
-      "vn 1.0000 -0.0000 -0.0000\n" +
-      "vn -0.0000 -0.0000 -1.0000\n" +
-      "vt 0.625000 0.500000\n" +
-      "vt 0.875000 0.500000\n" +
-      "vt 0.875000 0.750000\n" +
-      "vt 0.625000 0.750000\n" +
-      "vt 0.375000 0.750000\n" +
-      "vt 0.625000 1.000000\n" +
-      "vt 0.375000 1.000000\n" +
-      "vt 0.375000 0.000000\n" +
-      "vt 0.625000 0.000000\n" +
-      "vt 0.625000 0.250000\n" +
-      "vt 0.375000 0.250000\n" +
-      "vt 0.125000 0.500000\n" +
-      "vt 0.375000 0.500000\n" +
-      "vt 0.125000 0.750000\n" +
-      "s 0\n" +
-      "usemtl Material\n" +
-      "f 1/1/1 5/2/1 7/3/1 3/4/1\n" +
-      "f 4/5/2 3/4/2 7/6/2 8/7/2\n" +
-      "f 8/8/3 7/9/3 5/10/3 6/11/3\n" +
-      "f 6/12/4 2/13/4 4/5/4 8/14/4\n" +
-      "f 2/13/5 1/1/5 3/4/5 4/5/5\n" +
-      "f 6/11/6 5/10/6 1/1/6 2/13/6\n").getBytes());
-
-  public static Obj obj(String file) {
-    try {
-      return Obj.load(Files.readAllBytes(Paths.get(file)));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-
-  public static BufferedImage img(String file) {
-    try {
-      return ImageIO.read(Files.newInputStream(Paths.get(file)));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-
   public static void renderNoise(BufferedImage image) {
     int w = image.getWidth();
     int h = image.getHeight();
@@ -107,7 +49,7 @@ public class Sketch2 {
   }
 
   public static Obj photosphere(double size) {
-    Obj sphere = obj("assets/blender_uv_sphere.obj");
+    Obj sphere = Obj.load(Paths.get("assets/blender_uv_sphere.obj"));
     // invert normals
     for (int i = 0; i < sphere.face.length; i += 9) {
       int v = sphere.face[i + 3];
@@ -132,17 +74,17 @@ public class Sketch2 {
   }
 
   public static void main(String[] args) {
-    Obj teapot = obj("assets/teapot.obj");
+    Obj teapot = Obj.load(Paths.get("assets/teapot.obj"));
     //Obj.flatNormal(teapot);
-    Obj cow = obj("assets/cow.obj");
+    Obj cow = Obj.load(Paths.get("assets/cow.obj"));
     Obj.fixNormal(cow);
-    BufferedImage cowImage = img("assets/cow.png");
+    BufferedImage cowImage = Obj.image(Paths.get("assets/cow.png"));
     boolean useSphere = false;
     Obj sphere = null;
     BufferedImage sphereImage = null;
     if (useSphere) {
       sphere = photosphere(80);
-      sphereImage = img("assets/photosphere.jpg");
+      sphereImage = Obj.image(Paths.get("assets/photosphere.jpg"));
     }
 
     Screen screen = new Screen();
@@ -188,6 +130,7 @@ public class Sketch2 {
     sc3.translation(0, 0, -20);
     Engine3d.Group superCow = sc3;
     // more cubes
+    Obj cube = new Shapes.Cube();
     engine3d.shape(cube).translation(20, 0, 0);
     engine3d.shape(cube).translation(-20, 0, 0);
     engine3d.shape(cube).translation(0, 0, 20);
