@@ -1,6 +1,7 @@
 #version 330
 
-in vec2 outTextCoord;
+in vec2 oTexCoords;
+uniform vec4 diffuseColor;
 
 out vec4 fragColor;
 
@@ -14,5 +15,5 @@ uniform Material material;
 
 void main()
 {
-    fragColor = texture(txtSampler, outTextCoord) + material.diffuse;
+    fragColor = texture(txtSampler, oTexCoords) * diffuseColor;
 }

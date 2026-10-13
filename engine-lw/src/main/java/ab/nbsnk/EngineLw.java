@@ -22,6 +22,7 @@ import ab.nbsnk.lw.Program;
 import ab.nbsnk.lw.Texture;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 
@@ -141,10 +142,11 @@ public class EngineLw implements Engine3d {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     Map<NodeLw, Matrix4f> map = new HashMap<>();
     dfs(group.nodes, new Matrix4f().identity(), map);
-    Matrix4f cameraMatrix = new Matrix4f(camera.matrix).invert();
+    Matrix4f viewProjectionMatrix = new Matrix4f(projectionMatrix).mul(new Matrix4f(camera.matrix).invert());
     for (Map.Entry<NodeLw, Matrix4f> entry : map.entrySet()) {
       if (!(entry.getKey() instanceof ShapeLw)) continue;
-      program.use(projectionMatrix, cameraMatrix, entry.getValue());
+      program.use(viewProjectionMatrix, entry.getValue());
+      program.set("diffuseColor", new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
       ShapeLw shape = (ShapeLw) entry.getKey();
       Optional.ofNullable(shape.texture).ifPresentOrElse(Texture::bind, Texture::unbind);
       shape.mesh.draw();

@@ -67,8 +67,7 @@ public class Program implements AutoCloseable {
         throw new MissingResourceException("", "", path);
       }
     };
-    return new Program(r.apply("vs.txt"), r.apply("fs.txt"), "projectionMatrix", "viewMatrix", "modelMatrix",
-        "material.diffuse");
+    return new Program(r.apply("vs.txt"), r.apply("fs.txt"), "viewProjectionMatrix", "worldMatrix", "diffuseColor");
   }
 
   public void use(Matrix4f... values) {

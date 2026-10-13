@@ -39,7 +39,9 @@ public class Sketch4 {
     Engine3d engine3d = new EngineDual(new EngineNbs(), new EngineFx()).open(screen.image)
         .setFarClip(80);
     engine3d.shape(new Shapes.Sphere().interpolateNormal()).setSpecular(0xFFFFFFFF, 200).translation(0, 0, -5);
-    int lights = 5;
+    engine3d.shape(new Shapes.Square().scale(0.5)).setColor(0x80FF0000).translation(0.5, 0.5, -4);
+    engine3d.shape(new Shapes.Square()).setColor(0x8000FF00).translation(1.2, 0.9, -4.1);
+    int lights = 3;
     double r = 20;
     for (int i = 0; i < lights; i++) {
       double a = i * 2 * Math.PI / lights;
