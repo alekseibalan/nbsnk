@@ -18,6 +18,7 @@
 package ab.nbsnk.lw;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f; // FIXME joml coupling
 import org.joml.Vector4f;
 
 import java.io.IOException;
@@ -45,11 +46,7 @@ public class Program implements AutoCloseable {
     if (glGetProgrami(program, GL_LINK_STATUS) == 0) throw new IllegalStateException();
     for (int shader : shaders) glDetachShader(program, shader);
     for (int shader : shaders) glDeleteShader(shader);
-    for (String uniform : uniforms) {
-      int uniformLocation = glGetUniformLocation(program, uniform);
-      if (uniformLocation < 0) throw new IllegalStateException();
-      this.uniforms.put(uniform, uniformLocation);
-    }
+    for (String uniform : uniforms) getUniformLocation(uniform);
   }
 
   @Override
@@ -67,16 +64,15 @@ public class Program implements AutoCloseable {
         throw new MissingResourceException("", "", path);
       }
     };
-    return new Program(r.apply("vs.txt"), r.apply("fs.txt"), "viewProjectionMatrix", "worldMatrix", "diffuseColor");
+    return new Program(r.apply("ovs.txt"), r.apply("ofs.txt"));
   }
 
-  public void use(Matrix4f... values) {
+  public void use(Object... values) {
     glUseProgram(program);
-    float[] floats = new float[16];
     int i = 0;
     for (int uniform : uniforms.values()) {
       if (i >= values.length) break;
-      glUniformMatrix4fv(uniform, false, values[i++].get(floats));
+      set(uniform, values[i++]);
     }
   }
 
@@ -90,8 +86,26 @@ public class Program implements AutoCloseable {
     return shader;
   }
 
-  public void set(String uniform, Vector4f value) {
-    glUniform4f(uniforms.get(uniform), value.x, value.y, value.z, value.w);
+  void set(int location, Object v) {
+    if (v instanceof Matrix4f) {
+      float[] floats = new float[16];
+      glUniformMatrix4fv(location, false, ((Matrix4f) v).get(floats));
+    } else if (v instanceof Vector4f) glUniform4f(location, ((Vector4f) v).x, ((Vector4f) v).y, ((Vector4f) v).z, ((Vector4f) v).w);
+    else if (v instanceof Vector3f) glUniform3f(location, ((Vector3f) v).x, ((Vector3f) v).y, ((Vector3f) v).z);
+    else if (v instanceof Integer) glUniform1i(location, (Integer) v);
+    else throw new IllegalStateException(v.getClass().getSimpleName());
+  }
+
+  int getUniformLocation(String uniformName) {
+    return uniforms.computeIfAbsent(uniformName, name -> {
+      int location = glGetUniformLocation(program, name);
+      if (location < 0) throw new IllegalStateException(name);
+      return location;
+    });
+  }
+
+  public void set(String uniformName, Object value) {
+    set(getUniformLocation(uniformName), value);
   }
 
 }

@@ -52,6 +52,8 @@ public class EngineLw implements Engine3d {
   GroupLw group = new GroupLw(null);
   private Matrix4f projectionMatrix;
   private Map<BufferedImage, Texture> imageCache = new HashMap<>();
+  private Vector3f ambientColor = new Vector3f();
+  private Texture defaultTexture;
 
   @Override
   public EngineLw open(BufferedImage image) {
@@ -72,6 +74,9 @@ public class EngineLw implements Engine3d {
     projectionMatrix = new Matrix4f().setPerspective(
         (float) Math.toRadians(Math.atan2(24.0 / 2, 50.0) * 2 / (Math.PI * 2) * 360),
         (float) screenWidth / screenHeight, 0.01f, 100000.f);
+    BufferedImage defaultImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+    defaultImage.setRGB(0, 0, -1);
+    defaultTexture = new Texture(defaultImage);
     return this;
   }
 
@@ -106,6 +111,7 @@ public class EngineLw implements Engine3d {
 
   @Override
   public EngineLw setAmbient(int color) {
+    ambientColor.set((color >> 16 & 0xFF) / 255., (color >> 8 & 0xFF) / 255., (color & 0xFF) / 255.);
     return this;
   }
 
@@ -142,13 +148,30 @@ public class EngineLw implements Engine3d {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     Map<NodeLw, Matrix4f> map = new HashMap<>();
     dfs(group.nodes, new Matrix4f().identity(), map);
+    program.use();
+    program.set("diffuseTexture", 0);
+    program.set("selfIllumTexture", 1);
     Matrix4f viewProjectionMatrix = new Matrix4f(projectionMatrix).mul(new Matrix4f(camera.matrix).invert());
+    program.set("viewProjectionMatrix", viewProjectionMatrix);
+    program.set("ambientColor", ambientColor);
+    program.set("diffuseColor", new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
+    int lightId = 0;
+    for (Map.Entry<NodeLw, Matrix4f> entry : map.entrySet()) {
+      if (!(entry.getKey() instanceof LightLw)) continue;
+      LightLw light = (LightLw) entry.getKey();
+      String prefix = "lights[" + lightId++ + "].";
+      Vector4f pos = new Vector4f(0, 0, 0, 1);
+      Matrix4f m = entry.getValue();
+      m.transform(pos);
+      program.set(prefix + "pos", pos);
+      program.set(prefix + "color", light.color);
+    }
     for (Map.Entry<NodeLw, Matrix4f> entry : map.entrySet()) {
       if (!(entry.getKey() instanceof ShapeLw)) continue;
-      program.use(viewProjectionMatrix, entry.getValue());
-      program.set("diffuseColor", new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
+      program.set("worldMatrix", entry.getValue());
       ShapeLw shape = (ShapeLw) entry.getKey();
-      Optional.ofNullable(shape.texture).ifPresentOrElse(Texture::bind, Texture::unbind);
+      glActiveTexture(GL_TEXTURE0);
+      Optional.ofNullable(shape.texture).ifPresentOrElse(Texture::bind, () -> defaultTexture.bind());
       shape.mesh.draw();
     }
 
@@ -275,12 +298,15 @@ public class EngineLw implements Engine3d {
   }
 
   public static class LightLw extends NodeLw implements Light {
+    Vector3f color = new Vector3f();
+
     public LightLw(GroupLw group) {
       super(group);
     }
 
     @Override
     public LightLw setColor(int color) {
+      this.color.set((color >> 16 & 0xFF) / 255., (color >> 8 & 0xFF) / 255., (color & 0xFF) / 255.);
       return this;
     }
   }

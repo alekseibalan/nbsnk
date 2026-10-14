@@ -32,20 +32,28 @@ public class Mesh implements AutoCloseable {
 
   public Mesh(Obj obj) {
     int length = obj.face.length / 3;
+    if (length % 3 != 0) throw new IllegalStateException();
     int[] face = new int[length];
     float[] vertex = new float[length * 3];
     float[] texture = new float[length * 2];
-    for (int i = 0, iv = 0, it = 0; i < length; i++) {
+    float[] normal = new float[length * 4];
+    for (int i = 0, iv = 0, it = 0, in = 0; i < length; i++) {
       // FIXME: 2026-09-20 shader must understand obj natively
       int sv = obj.face[i * 3] * 3;
+      int sn = obj.face[i * 3 + 1] * 3;
       int st = obj.face[i * 3 + 2] * 2;
       vertex[iv++] = (float) obj.vertex[sv++];
       vertex[iv++] = (float) obj.vertex[sv++];
       vertex[iv++] = (float) obj.vertex[sv++];
       texture[it++] = (float) obj.texture[st++];
       texture[it++] = (float) (1 - obj.texture[st++]);
+      normal[in++] = (float) obj.normal[sn++];
+      normal[in++] = (float) obj.normal[sn++];
+      normal[in++] = (float) obj.normal[sn++];
+      normal[in++] = 0;
       face[i] = i;
     }
+    MeshUtil.buildQuat(vertex, texture, normal);
 
     this.points = face.length;
     vertexArray = glGenVertexArrays();
@@ -64,6 +72,13 @@ public class Mesh implements AutoCloseable {
     glBufferData(GL_ARRAY_BUFFER, texture, GL_STATIC_DRAW);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+
+    buffer = glGenBuffers();
+    buffers.add(buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, normal, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, false, 0, 0);
 
     buffer = glGenBuffers();
     buffers.add(buffer);
