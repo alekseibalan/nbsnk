@@ -30,14 +30,12 @@ public class Texture implements AutoCloseable {
     int height = image.getHeight();
     int[] raster = new int[width * height];
     for (int y = 0; y < height; y++) for (int x = 0; x < width; x++) {
-      int rgb = image.getRGB(x, y);
+      int rgb = image.getRGB(x, height - y - 1);
       raster[y * width + x] = rgb & 0xFF00FF00 | rgb << 16 & 0xFF0000 | rgb >> 16 & 0xFF;
     }
     texture = glGenTextures();
     glBindTexture(GL_TEXTURE_2D, texture);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, raster);
     glGenerateMipmap(GL_TEXTURE_2D);
   }
@@ -49,6 +47,14 @@ public class Texture implements AutoCloseable {
 
   public void bind() {
     glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  }
+
+  public void bindNormal() {
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   }
 
   public static void unbind() {

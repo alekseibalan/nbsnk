@@ -99,9 +99,18 @@ public class Sketch2 {
 //    Engine3d engine3d = new EngineFx().open(screen.image);
 //    Engine3d engine3d = new EngineNbs().open(screen.image);
     FpsMeter fpsMeter = new FpsMeter();
-    Engine3d engine3d = new EngineDual(new EngineNbs(), new EngineLw()).open(screen.image)
+    Engine3d engine3d = new EngineDual(new EngineFx(), new EngineLw()).open(screen.image)
         .textSupplier(() -> String.format("fps: %.0f", fpsMeter.getFps())).setFarClip(80)
-        .setAmbient(0xFF221100).background(background);
+        .setAmbient(0xFF221100);//.background(background);
+    // bump test
+    BufferedImage normalMapExampleWithSceneAndResult = Obj.image(
+        Paths.get("assets/Normal_map_example_with_scene_and_result.png"));
+    BufferedImage obj1bump = new BufferedImage(2048, 2048, BufferedImage.TYPE_INT_ARGB);
+    obj1bump.getGraphics().drawImage(normalMapExampleWithSceneAndResult, -2048, 0, null);
+    Obj obj1 = new Shapes.Square();
+    BufferedImage obj1image = Obj.image(Paths.get("assets/maptest.png"));
+    engine3d.shape(obj1).setBumpMap(obj1bump).setSpecular(-1, 100).translation(-5, 5, -40);
+
     // teapot test
     engine3d.shape(teapot).translation(-10, 8, -40);
     engine3d.shape(teapot).translation(-10, 4, -40).rotation(0.0, 0.0, 0.1); // positive roll
@@ -154,12 +163,16 @@ public class Sketch2 {
     boolean[] open = {true};
     Queue<Integer> sysex = new LinkedBlockingQueue<>();
 
-    AtomicInteger cameraTx = new AtomicInteger(-130);
-    AtomicInteger cameraTy = new AtomicInteger(200);
-    AtomicInteger cameraTz = new AtomicInteger(-22);
-    AtomicInteger cameraRy = new AtomicInteger(3600);
+    AtomicInteger cameraTx = new AtomicInteger();
+    AtomicInteger cameraTy = new AtomicInteger();
+    AtomicInteger cameraTz = new AtomicInteger();
+    AtomicInteger cameraRy = new AtomicInteger();
     AtomicInteger cameraRp = new AtomicInteger();
     AtomicInteger cameraRr = new AtomicInteger();
+    cameraTx.set(-130);
+    cameraTy.set(200);
+    cameraTz.set(-22);
+    cameraRy.set(3600);
     //screen.enablePointer();
     screen.gameController = true;
     boolean[] mouseButton = new boolean[10];

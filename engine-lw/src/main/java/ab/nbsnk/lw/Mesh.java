@@ -38,7 +38,6 @@ public class Mesh implements AutoCloseable {
     float[] texture = new float[length * 2];
     float[] normal = new float[length * 4];
     for (int i = 0, iv = 0, it = 0, in = 0; i < length; i++) {
-      // FIXME: 2026-09-20 shader must understand obj natively
       int sv = obj.face[i * 3] * 3;
       int sn = obj.face[i * 3 + 1] * 3;
       int st = obj.face[i * 3 + 2] * 2;
@@ -46,7 +45,7 @@ public class Mesh implements AutoCloseable {
       vertex[iv++] = (float) obj.vertex[sv++];
       vertex[iv++] = (float) obj.vertex[sv++];
       texture[it++] = (float) obj.texture[st++];
-      texture[it++] = (float) (1 - obj.texture[st++]);
+      texture[it++] = (float) obj.texture[st++];
       normal[in++] = (float) obj.normal[sn++];
       normal[in++] = (float) obj.normal[sn++];
       normal[in++] = (float) obj.normal[sn++];

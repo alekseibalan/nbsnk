@@ -27,7 +27,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.function.UnaryOperator;
 
 import static org.lwjgl.opengl.GL33C.*;
 
@@ -56,15 +55,16 @@ public class Program implements AutoCloseable {
     uniforms = null;
   }
 
+  static String resource(String path) {
+    try {
+      return new String(Program.class.getResourceAsStream(path).readAllBytes());
+    } catch (IOException | NullPointerException e) {
+      throw new MissingResourceException("", "", path);
+    }
+  }
+
   public static Program newDefault() {
-    UnaryOperator<String> r = path -> {
-      try {
-        return new String(Program.class.getResourceAsStream(path).readAllBytes());
-      } catch (IOException | NullPointerException e) {
-        throw new MissingResourceException("", "", path);
-      }
-    };
-    return new Program(r.apply("ovs.txt"), r.apply("ofs.txt"));
+    return new Program(resource("ovs.txt"), resource("ofs.txt"));
   }
 
   public void use(Object... values) {
